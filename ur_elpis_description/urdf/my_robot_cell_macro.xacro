@@ -1,0 +1,341 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:include filename="$(find ur_description)/urdf/ur_macro.xacro"/>
+
+  <xacro:macro name="my_robot_cell" params="
+    parent
+    *origin
+    ur_type
+    joint_limits_parameters_file
+    kinematics_parameters_file
+    physical_parameters_file
+    visual_parameters_file
+    ">
+
+    <!-- ============================================ -->
+    <!-- Table (Lab Scene) -->
+    <!-- ============================================ -->
+    <joint name="world_to_table" type="fixed">
+      <xacro:insert_block name="origin" />
+      <parent link="${parent}" />
+      <child link="table_base" />
+    </joint>
+
+    <link name="table_base">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 1.5708"/>  <!-- 90 degrees rotation around Z axis -->
+        <geometry>
+          <mesh filename="package://ur_elpis_description/assets/lab_scene/lab_scene.obj"/>
+        </geometry>
+        <material name="table_material">
+          <color rgba="0.7 0.7 0.7 1.0"/>
+        </material>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 1.5708"/>
+        <geometry>
+          <mesh filename="package://ur_elpis_description/assets/lab_scene/lab_scene_vhacd.stl"/>
+        </geometry>
+      </collision>
+      <inertial>
+        <mass value="50.0"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <inertia ixx="10.0" ixy="0.0" ixz="0.0" iyy="10.0" iyz="0.0" izz="10.0"/>
+      </inertial>
+    </link>
+
+    <!-- ============================================ -->
+    <!-- Mounting Plate -->
+    <!-- ============================================ -->
+    <link name="mounting_plate">
+      <visual>
+        <geometry>
+          <box size="0.2 0.2 0.005"/>  <!-- 20cm x 20cm x 5mm -->
+        </geometry>
+        <origin xyz="0 0 0.0025" rpy="0 0 0"/>
+        <material name="plate_material">
+          <color rgba="0.5 0.5 0.5 1.0"/>
+        </material>
+      </visual>
+      <collision>
+        <geometry>
+          <box size="0.2 0.2 0.005"/>
+        </geometry>
+        <origin xyz="0 0 0.0025" rpy="0 0 0"/>
+      </collision>
+      <inertial>
+        <mass value="0.2"/>
+        <origin xyz="0 0 0.0025" rpy="0 0 0"/>
+        <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001"/>
+      </inertial>
+    </link>
+    <joint name="table_to_plate" type="fixed">
+      <parent link="table_base"/>
+      <child link="mounting_plate"/>
+      <origin xyz="0.0055 0.5 0.7" rpy="0 0 0"/>  <!-- Plate on top of table -->
+    </joint>
+
+    <!-- ============================================ -->
+    <!-- Ceiling Slab (Height Limiter) -->
+    <!-- ============================================ -->
+    <link name="ceiling_slab">
+      <visual>
+        <geometry>
+          <box size="1.524 1.524 0.05"/>  <!-- Full table dimensions, 5cm thick -->
+        </geometry>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <material name="ceiling_material">
+          <color rgba="0.3 0.3 0.3 0.8"/>  <!-- Semi-transparent dark gray -->
+        </material>
+      </visual>
+      <collision>
+        <geometry>
+          <box size="1.524 1.524 0.05"/>
+        </geometry>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+      </collision>
+      <inertial>
+        <mass value="20.0"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <inertia ixx="4.0" ixy="0.0" ixz="0.0" iyy="4.0" iyz="0.0" izz="4.0"/>
+      </inertial>
+    </link>
+    <joint name="table_to_ceiling" type="fixed">
+      <parent link="table_base"/>
+      <child link="ceiling_slab"/>
+      <origin xyz="0.0 0.0 1.65" rpy="0 0 0"/>  <!-- 0.7m (table top) + 0.95m = 1.65m above table base -->
+    </joint>
+
+    <!-- ============================================ -->
+    <!-- UR Robot -->
+    <!-- ============================================ -->
+    <xacro:ur_robot
+      name="${ur_type}"
+      tf_prefix="${ur_type}_"
+      parent="mounting_plate"
+      joint_limits_parameters_file="${joint_limits_parameters_file}"
+      kinematics_parameters_file="${kinematics_parameters_file}"
+      physical_parameters_file="${physical_parameters_file}"
+      visual_parameters_file="${visual_parameters_file}"
+      generate_ros2_control_tag="false"
+    >
+      <origin xyz="0 0 0" rpy="0 0 -3.141592653589793" />  <!-- Rotate 180 degrees to match original -->
+    </xacro:ur_robot>
+
+    <!-- ============================================ -->
+    <!-- Gripper (Robotis RH-P12-RN) -->
+    <!-- ============================================ -->
+    <material name="grey">
+      <color rgba="0.2 0.2 0.2 1.0"/>
+    </material>
+    
+    <joint name="tool0_rh_p12_rn_base" type="fixed">
+      <origin rpy="0 0 -1.570796" xyz="0 0 0"/>
+      <parent link="${ur_type}_tool0"/>
+      <child link="rh_p12_rn_base"/>
+    </joint>
+    <link name="rh_p12_rn_base">
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://ur_elpis_description/assets/robotis_rh_p12_rn/collision/base.stl" scale="0.001 0.001 0.001"/>
+        </geometry>
+      </collision>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://ur_elpis_description/assets/robotis_rh_p12_rn/visual/base.stl" scale="0.001 0.001 0.001"/>
+        </geometry>
+        <material name="grey"/>
+      </visual>
+      <inertial>
+        <origin xyz="0.000 0.000 0.032" rpy="0 0 0"/>
+        <mass value="0.236"/>
+        <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001" />
+      </inertial>
+    </link>
+    <joint name="rh_p12_rn" type="fixed">
+      <parent link="rh_p12_rn_base"/>
+      <child link="rh_p12_rn_r1"/>
+      <origin xyz="0.0 0.008 0.058" rpy="0 0 0"/>
+    </joint>
+    <link name="rh_p12_rn_r1">
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://ur_elpis_description/assets/robotis_rh_p12_rn/collision/r1.stl" scale="0.001 0.001 0.001"/>
+        </geometry>
+      </collision>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://ur_elpis_description/assets/robotis_rh_p12_rn/visual/r1.stl" scale="0.001 0.001 0.001"/>
+        </geometry>
+        <material name="grey"/>
+      </visual>
+      <inertial>
+        <origin xyz="0.000 0.034 0.004" rpy="0 0 0"/>
+        <mass value="0.068"/>
+        <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001" />
+      </inertial>
+    </link>
+    <joint name="rh_r2" type="fixed">
+      <parent link="rh_p12_rn_r1"/>
+      <child link="rh_p12_rn_r2"/>
+      <origin xyz="0.0 0.0493634 0.0285" rpy="0 0 0"/>
+    </joint>
+    <link name="rh_p12_rn_r2">
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://ur_elpis_description/assets/robotis_rh_p12_rn/collision/r2.stl" scale="0.001 0.001 0.001"/>
+        </geometry>
+      </collision>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://ur_elpis_description/assets/robotis_rh_p12_rn/visual/r2.stl" scale="0.001 0.001 0.001"/>
+        </geometry>
+        <material name="grey"/>
+      </visual>
+      <inertial>
+        <origin xyz="0.000 0.006 0.011" rpy="0 0 0"/>
+        <mass value="0.022"/>
+        <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001" />
+      </inertial>
+    </link>
+    <joint name="rh_l1" type="fixed">
+      <parent link="rh_p12_rn_base"/>
+      <child link="rh_p12_rn_l1"/>
+      <origin xyz="0.0 -0.008 0.058" rpy="0 0 0"/>
+    </joint>
+    <link name="rh_p12_rn_l1">
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://ur_elpis_description/assets/robotis_rh_p12_rn/collision/l1.stl" scale="0.001 0.001 0.001"/>
+        </geometry>
+      </collision>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://ur_elpis_description/assets/robotis_rh_p12_rn/visual/l1.stl" scale="0.001 0.001 0.001"/>
+        </geometry>
+        <material name="grey"/>
+      </visual>
+      <inertial>
+        <origin xyz="0.000 -0.034 0.004" rpy="0 0 0"/>
+        <mass value="0.068"/>
+        <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001" />
+      </inertial>
+    </link>
+    <joint name="rh_l2" type="fixed">
+      <parent link="rh_p12_rn_l1"/>
+      <child link="rh_p12_rn_l2"/>
+      <origin xyz="0.0 -0.0493634 0.0285" rpy="0 0 0"/>
+    </joint>
+    <link name="rh_p12_rn_l2">
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://ur_elpis_description/assets/robotis_rh_p12_rn/collision/l2.stl" scale="0.001 0.001 0.001"/>
+        </geometry>
+      </collision>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://ur_elpis_description/assets/robotis_rh_p12_rn/visual/l2.stl" scale="0.001 0.001 0.001"/>
+        </geometry>
+        <material name="grey"/>
+      </visual>
+      <inertial>
+        <origin xyz="0.000 -0.006 0.011" rpy="0 0 0"/>
+        <mass value="0.022"/>
+        <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001" />
+      </inertial>
+    </link>
+    <joint name="ee_fixed_joint" type="fixed">
+      <parent link="rh_p12_rn_base"/>
+      <child link="ee_link"/>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.145"/>
+    </joint>
+    <link name="ee_link">
+      <inertial>
+        <mass value="1e-3"/>
+        <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
+        <inertia ixx="1e-5" ixy="0.0" ixz="0.0" iyy="1e-5" iyz="0.0" izz="1e-5"/>
+      </inertial>
+    </link>
+
+    <!-- ============================================ -->
+    <!-- Camera (RealSense D435) -->
+    <!-- ============================================ -->
+    <material name="white">
+      <color rgba="1.0 1.0 1.0 1.0"/>
+    </material>
+    
+    <joint name="d435_joint" type="fixed">
+      <origin rpy="0 -1.5707963267948966 0" xyz="-0.03 0 0.03"/>
+      <parent link="rh_p12_rn_base"/>
+      <child link="d435_bottom_screw_frame"/>
+    </joint>
+    <link name="d435_bottom_screw_frame">
+      <inertial>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <mass value="0.001"/>
+        <inertia ixx="1E-5" ixy="0" ixz="0" iyy="1E-5" iyz="-0" izz="1E-5"/>
+      </inertial>
+    </link>
+    <joint name="d435_link_joint" type="fixed">
+      <origin rpy="0 0 0" xyz="0 0.0175 0.0125"/>
+      <parent link="d435_bottom_screw_frame"/>
+      <child link="d435_link"/>
+    </joint>
+    <link name="d435_link">
+      <visual>
+        <origin rpy="1.5707963267948966 0 1.5707963267948966" xyz="0.0149 -0.0175 0"/>
+        <geometry>
+          <mesh filename="package://ur_elpis_description/assets/realsense2/visual/d435.obj"/>
+        </geometry>
+        <material name="white"/>
+      </visual>
+      <collision>
+        <origin rpy="0 0 0" xyz="0 -0.0175 0"/>
+        <geometry>
+          <box size="0.02505 0.09 0.025"/>
+        </geometry>
+      </collision>
+      <inertial>
+        <mass value="0.564"/>
+        <origin xyz="0 0 0"/>
+        <inertia ixx="0.003881243" ixy="0.0" ixz="0.0" iyy="0.000498940" iyz="0.0" izz="0.003879257"/>
+      </inertial>
+    </link>
+    <joint name="d435_depth_joint" type="fixed">
+      <origin rpy="1.5707963267948966 0 1.5707963267948966" xyz="0 0 0"/>
+      <parent link="d435_link"/>
+      <child link="d435_depth_frame"/>
+    </joint>
+    <link name="d435_depth_frame">
+      <inertial>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <mass value="0.001"/>
+        <inertia ixx="1E-5" ixy="0" ixz="0" iyy="1E-5" iyz="-0" izz="1E-5"/>
+      </inertial>
+    </link>
+    <joint name="d435_color_joint" type="fixed">
+      <origin rpy="0 0 0" xyz="-0.015 0 0"/>
+      <parent link="d435_depth_frame"/>
+      <child link="d435_color_frame"/>
+    </joint>
+    <link name="d435_color_frame">
+      <inertial>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <mass value="0.001"/>
+        <inertia ixx="1E-5" ixy="0" ixz="0" iyy="1E-5" iyz="-0" izz="1E-5"/>
+      </inertial>
+    </link>
+
+  </xacro:macro>
+
+</robot>
