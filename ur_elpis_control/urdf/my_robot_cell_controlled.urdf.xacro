@@ -38,7 +38,7 @@
     physical_parameters_file="$(arg physical_params)"
     visual_parameters_file="$(arg visual_params)"
   >
-    <origin xyz="0 0 1" rpy="0 0 0" />
+    <origin xyz="0 0 0" rpy="0 0 0" />
   </xacro:my_robot_cell>
 
 
@@ -56,6 +56,26 @@
     headless_mode="$(arg headless_mode)"
   />
 
-  <!--If you had more controlled devices in your description, e.g. a gripper, you can add another ros2_control tag here-->
+  <!--Gripper ros2_control configuration-->
+  <!-- Note: Gripper control is currently handled via the /control_gripper service.
+       To enable ros2_control for the gripper, a custom hardware interface plugin
+       that wraps the gripper library (librh_p12_rna.so) would need to be created.
+       For now, the gripper joints are defined as revolute in the URDF for visualization
+       but are controlled via the service interface. -->
+  <!--
+  <ros2_control name="gripper" type="actuator">
+    <hardware>
+      <plugin>gripper_hardware/GripperHardwareInterface</plugin>
+    </hardware>
+    <joint name="rh_p12_rn">
+      <command_interface name="position">
+        <param name="min">0.0</param>
+        <param name="max">1.12</param>
+      </command_interface>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+  </ros2_control>
+  -->
 
 </robot>

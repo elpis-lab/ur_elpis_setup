@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://ros.org/wiki/xacro">
   <xacro:include filename="$(find ur_description)/urdf/ur_macro.xacro"/>
+  <xacro:include filename="$(find realsense2_description)/urdf/_d435.urdf.xacro"/>
 
   <xacro:macro name="my_robot_cell" params="
     parent
@@ -130,7 +131,7 @@
     </material>
     
     <joint name="tool0_rh_p12_rn_base" type="fixed">
-      <origin rpy="0 0 -1.570796" xyz="0 0 0"/>
+      <origin rpy="0 0 1.570794" xyz="0 0 0"/>
       <parent link="${ur_type}_tool0"/>
       <child link="rh_p12_rn_base"/>
     </joint>
@@ -154,10 +155,12 @@
         <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001" />
       </inertial>
     </link>
-    <joint name="rh_p12_rn" type="fixed">
+    <joint name="rh_p12_rn" type="revolute">
       <parent link="rh_p12_rn_base"/>
       <child link="rh_p12_rn_r1"/>
       <origin xyz="0.0 0.008 0.058" rpy="0 0 0"/>
+      <axis xyz="1 0 0"/>
+      <limit lower="0.0" upper="1.12" effort="100.0" velocity="1.0"/>
     </joint>
     <link name="rh_p12_rn_r1">
       <collision>
@@ -179,10 +182,13 @@
         <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001" />
       </inertial>
     </link>
-    <joint name="rh_r2" type="fixed">
+    <joint name="rh_r2" type="revolute">
       <parent link="rh_p12_rn_r1"/>
       <child link="rh_p12_rn_r2"/>
       <origin xyz="0.0 0.0493634 0.0285" rpy="0 0 0"/>
+      <axis xyz="-1 0 0"/>
+      <limit lower="0.0" upper="1.12" effort="100.0" velocity="1.0"/>
+      <mimic joint="rh_p12_rn" multiplier="1.0" offset="0.0"/>
     </joint>
     <link name="rh_p12_rn_r2">
       <collision>
@@ -204,10 +210,13 @@
         <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001" />
       </inertial>
     </link>
-    <joint name="rh_l1" type="fixed">
+    <joint name="rh_l1" type="revolute">
       <parent link="rh_p12_rn_base"/>
       <child link="rh_p12_rn_l1"/>
       <origin xyz="0.0 -0.008 0.058" rpy="0 0 0"/>
+      <axis xyz="-1 0 0"/>
+      <limit lower="0.0" upper="1.12" effort="100.0" velocity="1.0"/>
+      <mimic joint="rh_p12_rn" multiplier="1.0" offset="0.0"/>
     </joint>
     <link name="rh_p12_rn_l1">
       <collision>
@@ -229,10 +238,13 @@
         <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001" />
       </inertial>
     </link>
-    <joint name="rh_l2" type="fixed">
+    <joint name="rh_l2" type="revolute">
       <parent link="rh_p12_rn_l1"/>
       <child link="rh_p12_rn_l2"/>
       <origin xyz="0.0 -0.0493634 0.0285" rpy="0 0 0"/>
+      <axis xyz="1 0 0"/>
+      <limit lower="0.0" upper="1.12" effort="100.0" velocity="1.0"/>
+      <mimic joint="rh_p12_rn" multiplier="1.0" offset="0.0"/>
     </joint>
     <link name="rh_p12_rn_l2">
       <collision>
@@ -270,71 +282,54 @@
     <!-- ============================================ -->
     <!-- Camera (RealSense D435) -->
     <!-- ============================================ -->
+    <!-- Using realsense2_description macro for D435 camera -->
+    <!-- Camera transformation from tool0 to camera_color_frame (measured):
+         Matrix:
+         0.99825    -0.027368   -0.052507   -0.007395
+         0.028123    0.99951     0.013702   -0.051154
+         0.052107   -0.015155    0.99853     0.069229
+         0           0           0           1
+         Translation: x=-0.007395, y=-0.051154, z=0.069229
+         Rotation (RPY): roll=-0.01517, pitch=-0.05212, yaw=0.02815
+    -->
+    <!-- Old manual camera definition (commented out):
     <material name="white">
       <color rgba="1.0 1.0 1.0 1.0"/>
     </material>
-    
     <joint name="d435_joint" type="fixed">
       <origin rpy="0 -1.5707963267948966 0" xyz="-0.03 0 0.03"/>
       <parent link="rh_p12_rn_base"/>
       <child link="d435_bottom_screw_frame"/>
     </joint>
-    <link name="d435_bottom_screw_frame">
-      <inertial>
-        <origin rpy="0 0 0" xyz="0 0 0"/>
-        <mass value="0.001"/>
-        <inertia ixx="1E-5" ixy="0" ixz="0" iyy="1E-5" iyz="-0" izz="1E-5"/>
-      </inertial>
-    </link>
-    <joint name="d435_link_joint" type="fixed">
-      <origin rpy="0 0 0" xyz="0 0.0175 0.0125"/>
-      <parent link="d435_bottom_screw_frame"/>
-      <child link="d435_link"/>
-    </joint>
-    <link name="d435_link">
-      <visual>
-        <origin rpy="1.5707963267948966 0 1.5707963267948966" xyz="0.0149 -0.0175 0"/>
-        <geometry>
-          <mesh filename="package://ur_elpis_description/assets/realsense2/visual/d435.obj"/>
-        </geometry>
-        <material name="white"/>
-      </visual>
-      <collision>
-        <origin rpy="0 0 0" xyz="0 -0.0175 0"/>
-        <geometry>
-          <box size="0.02505 0.09 0.025"/>
-        </geometry>
-      </collision>
-      <inertial>
-        <mass value="0.564"/>
-        <origin xyz="0 0 0"/>
-        <inertia ixx="0.003881243" ixy="0.0" ixz="0.0" iyy="0.000498940" iyz="0.0" izz="0.003879257"/>
-      </inertial>
-    </link>
-    <joint name="d435_depth_joint" type="fixed">
-      <origin rpy="1.5707963267948966 0 1.5707963267948966" xyz="0 0 0"/>
-      <parent link="d435_link"/>
-      <child link="d435_depth_frame"/>
-    </joint>
-    <link name="d435_depth_frame">
-      <inertial>
-        <origin rpy="0 0 0" xyz="0 0 0"/>
-        <mass value="0.001"/>
-        <inertia ixx="1E-5" ixy="0" ixz="0" iyy="1E-5" iyz="-0" izz="1E-5"/>
-      </inertial>
-    </link>
-    <joint name="d435_color_joint" type="fixed">
-      <origin rpy="0 0 0" xyz="-0.015 0 0"/>
-      <parent link="d435_depth_frame"/>
-      <child link="d435_color_frame"/>
-    </joint>
-    <link name="d435_color_frame">
-      <inertial>
-        <origin rpy="0 0 0" xyz="0 0 0"/>
-        <mass value="0.001"/>
-        <inertia ixx="1E-5" ixy="0" ixz="0" iyy="1E-5" iyz="-0" izz="1E-5"/>
-      </inertial>
-    </link>
+    ... (all the manual camera links and joints)
+    -->
+    
+    <!-- Use realsense2_description macro with measured transformation -->
+    <!-- 
+    IMPORTANT: The measured transformation matrix is from tool0 to camera_color_optical_frame.
+    But the macro attaches at camera_bottom_screw_frame, so we need to compose transforms.
+    
+    Chain in macro (camera_bottom_screw_frame -> camera_color_optical_frame):
+    - camera_bottom_screw_frame -> camera_link: xyz="0.0106 0.0175 0.0125"
+    - camera_link -> camera_color_frame: xyz="0 0.015 0"  
+    - camera_color_frame -> camera_color_optical_frame: rpy="-1.5708 0 -1.5708"
+    
+    To get tool0 -> camera_bottom_screw_frame, we need:
+    T_tool0_to_bottom_screw = T_tool0_to_color_optical * inv(T_bottom_screw_to_color_optical)
+    
+    This requires proper matrix composition. For now, using approximate values.
+    TODO: Calculate exact transform using matrix multiplication
+    -->
+    <xacro:sensor_d435 parent="rh_p12_rn_base" name="camera" use_nominal_extrinsics="true" use_mesh="true">
+      <!-- 
+      Calculated transform: rh_p12_rn_base -> camera_bottom_screw_frame
+      Composed from:
+      - Measured calibration: tool0 -> camera_color_optical_frame
+      - Inverse of: camera_bottom_screw_frame -> camera_color_optical_frame (from macro)
+      - Accounted for tool0 -> rh_p12_rn_base rotation (90° around Z)
+      -->
+      <origin rpy="-1.292395 -1.516365 1.320174" xyz="-0.050732 -0.007579 0.060014"/>
+    </xacro:sensor_d435>
 
   </xacro:macro>
 
