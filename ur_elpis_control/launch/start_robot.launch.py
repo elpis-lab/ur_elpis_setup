@@ -6,7 +6,6 @@ from launch.substitutions import (
     LaunchConfiguration,
     PathJoinSubstitution,
 )
-from launch_ros.actions import Node
 
 
 def generate_launch_description():
@@ -147,22 +146,13 @@ def generate_launch_description():
         }.items(),
     )
 
-    # Control gripper server - publishes actual gripper joint states and provides /control_gripper service
-    control_gripper_server = Node(
-        package='gripper',
-        executable='control_gripper_server',
-        name='control_gripper_server',
-        output='screen',
-        respawn=True
+    gripper_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            [
+                PathJoinSubstitution([FindPackageShare("gripper"), "launch"]),
+                "/gripper.launch.py",
+            ]
+        ),
     )
 
-    # Merge UR arm and gripper joint states so RSP can publish transforms for all links
-    joint_state_merger = Node(
-        package='gripper',
-        executable='joint_state_merger',
-        name='joint_state_merger',
-        output='screen',
-        respawn=True
-    )
-
-    return LaunchDescription(declared_arguments + [base_launch, control_gripper_server, joint_state_merger])
+    return LaunchDescription(declared_arguments + [base_launch, gripper_launch])
