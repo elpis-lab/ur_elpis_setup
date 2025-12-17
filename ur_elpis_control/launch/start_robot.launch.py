@@ -32,7 +32,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "robot_ip",
-            default_value="192.168.56.101",  # put your robot's IP address here
+            default_value="192.168.0.100",  # put your robot's IP address here
             description="IP address by which the robot can be reached.",
         )
     )
@@ -145,7 +145,8 @@ def generate_launch_description():
             "headless_mode": headless_mode,
         }.items(),
     )
-
+    
+    # Launches our gripper nodes for publishing joint states and providing action server for MoveIt control
     gripper_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             [

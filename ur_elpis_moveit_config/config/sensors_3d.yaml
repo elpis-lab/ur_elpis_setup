@@ -1,6 +1,6 @@
 
 sensors:
-  - default_sensor
+  - [] # replace with default_sensor or other sensor with appropriately assigned parameters, moveit pro has sensors.yaml file for reference
 default_sensor:
   filtered_cloud_topic: filtered_cloud
   image_topic: /camera/camera/aligned_depth_to_color/image_raw

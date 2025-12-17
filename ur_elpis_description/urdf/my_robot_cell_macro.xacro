@@ -14,38 +14,6 @@
     ">
 
     <!-- ============================================ -->
-    <!-- Table (Lab Scene) -->
-    <!-- ============================================ -->
-    <joint name="world_to_table" type="fixed">
-      <xacro:insert_block name="origin" />
-      <parent link="${parent}" />
-      <child link="table_base" />
-    </joint>
-
-    <link name="table_base">
-      <visual>
-        <origin xyz="0 0 0" rpy="0 0 1.5708"/>  <!-- 90 degrees rotation around Z axis -->
-        <geometry>
-          <mesh filename="package://ur_elpis_description/assets/lab_scene/lab_scene.obj"/>
-        </geometry>
-        <material name="table_material">
-          <color rgba="0.7 0.7 0.7 1.0"/>
-        </material>
-      </visual>
-      <collision>
-        <origin xyz="0 0 0" rpy="0 0 1.5708"/>
-        <geometry>
-          <mesh filename="package://ur_elpis_description/assets/lab_scene/lab_scene_vhacd.stl"/>
-        </geometry>
-      </collision>
-      <inertial>
-        <mass value="50.0"/>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
-        <inertia ixx="10.0" ixy="0.0" ixz="0.0" iyy="10.0" iyz="0.0" izz="10.0"/>
-      </inertial>
-    </link>
-
-    <!-- ============================================ -->
     <!-- Mounting Plate -->
     <!-- ============================================ -->
     <link name="mounting_plate">
@@ -70,41 +38,11 @@
         <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001"/>
       </inertial>
     </link>
-    <joint name="table_to_plate" type="fixed">
-      <parent link="table_base"/>
+    <joint name="world_to_plate" type="fixed">
+      <xacro:insert_block name="origin" />
+      <parent link="${parent}" />
       <child link="mounting_plate"/>
-      <origin xyz="0.0055 0.5 0.7" rpy="0 0 0"/>  <!-- Plate on top of table -->
-    </joint>
-
-    <!-- ============================================ -->
-    <!-- Ceiling Slab (Height Limiter) -->
-    <!-- ============================================ -->
-    <link name="ceiling_slab">
-      <visual>
-        <geometry>
-          <box size="1.524 1.524 0.05"/>  <!-- Full table dimensions, 5cm thick -->
-        </geometry>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
-        <material name="ceiling_material">
-          <color rgba="0.3 0.3 0.3 0.8"/>  <!-- Semi-transparent dark gray -->
-        </material>
-      </visual>
-      <collision>
-        <geometry>
-          <box size="1.524 1.524 0.05"/>
-        </geometry>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
-      </collision>
-      <inertial>
-        <mass value="20.0"/>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
-        <inertia ixx="4.0" ixy="0.0" ixz="0.0" iyy="4.0" iyz="0.0" izz="4.0"/>
-      </inertial>
-    </link>
-    <joint name="table_to_ceiling" type="fixed">
-      <parent link="table_base"/>
-      <child link="ceiling_slab"/>
-      <origin xyz="0.0 0.0 1.65" rpy="0 0 0"/>  <!-- 0.7m (table top) + 0.95m = 1.65m above table base -->
+      <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
     </joint>
 
     <!-- ============================================ -->
@@ -118,9 +56,9 @@
       kinematics_parameters_file="${kinematics_parameters_file}"
       physical_parameters_file="${physical_parameters_file}"
       visual_parameters_file="${visual_parameters_file}"
-      generate_ros2_control_tag="false"
-    >
-      <origin xyz="0 0 0" rpy="0 0 -3.141592653589793" />  <!-- Rotate 180 degrees to match original -->
+      generate_ros2_control_tag="false">
+     
+      <origin xyz="0 0 0" rpy="0 0 -3.141592653589793" />   <!-- Rotate 180 degrees to match original config in our lab setup-->
     </xacro:ur_robot>
 
     <!-- ============================================ -->
@@ -130,11 +68,12 @@
       <color rgba="0.2 0.2 0.2 1.0"/>
     </material>
     
-    <joint name="tool0_rh_p12_rn_base" type="fixed">
+    <joint name="tool0_rh_p12_rn_base" type="fixed">    <!-- Joint connecting UR tool frame to gripper -->
       <origin rpy="0 0 1.570794" xyz="0 0 0"/>
       <parent link="${ur_type}_tool0"/>
       <child link="rh_p12_rn_base"/>
     </joint>
+
     <link name="rh_p12_rn_base">
       <collision>
         <origin xyz="0 0 0" rpy="0 0 0"/>
@@ -283,54 +222,14 @@
     <!-- Camera (RealSense D435) -->
     <!-- ============================================ -->
     <!-- Using realsense2_description macro for D435 camera -->
-    <!-- Camera transformation from tool0 to camera_color_frame (measured):
-         Matrix:
-         0.99825    -0.027368   -0.052507   -0.007395
-         0.028123    0.99951     0.013702   -0.051154
-         0.052107   -0.015155    0.99853     0.069229
-         0           0           0           1
-         Translation: x=-0.007395, y=-0.051154, z=0.069229
-         Rotation (RPY): roll=-0.01517, pitch=-0.05212, yaw=0.02815
-    -->
-    <!-- Old manual camera definition (commented out):
-    <material name="white">
-      <color rgba="1.0 1.0 1.0 1.0"/>
-    </material>
-    <joint name="d435_joint" type="fixed">
-      <origin rpy="0 -1.5707963267948966 0" xyz="-0.03 0 0.03"/>
-      <parent link="rh_p12_rn_base"/>
-      <child link="d435_bottom_screw_frame"/>
-    </joint>
-    ... (all the manual camera links and joints)
-    -->
-    
-    <!-- Use realsense2_description macro with measured transformation -->
-    <!-- 
-    IMPORTANT: The measured transformation matrix is from tool0 to camera_color_optical_frame.
-    But the macro attaches at camera_bottom_screw_frame, so we need to compose transforms.
-    
-    Chain in macro (camera_bottom_screw_frame -> camera_color_optical_frame):
-    - camera_bottom_screw_frame -> camera_link: xyz="0.0106 0.0175 0.0125"
-    - camera_link -> camera_color_frame: xyz="0 0.015 0"  
-    - camera_color_frame -> camera_color_optical_frame: rpy="-1.5708 0 -1.5708"
-    
-    To get tool0 -> camera_bottom_screw_frame, we need:
-    T_tool0_to_bottom_screw = T_tool0_to_color_optical * inv(T_bottom_screw_to_color_optical)
-    
-    This requires proper matrix composition. For now, using approximate values.
-    TODO: Calculate exact transform using matrix multiplication
-    -->
     <xacro:sensor_d435 parent="rh_p12_rn_base" name="camera" use_nominal_extrinsics="true" use_mesh="true">
-      <!-- 
-      Calculated transform: rh_p12_rn_base -> camera_bottom_screw_frame
-      Composed from:
-      - Measured calibration: tool0 -> camera_color_optical_frame
-      - Inverse of: camera_bottom_screw_frame -> camera_color_optical_frame (from macro)
-      - Accounted for tool0 -> rh_p12_rn_base rotation (90° around Z)
-      -->
+      <!-- TODO: Calculate exact transform from tool0 to camera_color_optical_frame and replace current values-->
+      <!-- - Measured calibration: tool0 -> camera_color_optical_frame -->
+      <!-- - Inverse of: camera_bottom_screw_frame -> camera_color_optical_frame (from macro) -->
+      <!-- - Accounted for tool0 -> rh_p12_rn_base rotation (90° around Z) -->
       <origin rpy="-1.292395 -1.516365 1.320174" xyz="-0.050732 -0.007579 0.060014"/>
+       <!-- Assuming camera mounted on camera_bottom_screw_frame, so getting accurate pose of camera_bottom_screw_frame is crucial-->
     </xacro:sensor_d435>
 
   </xacro:macro>
-
 </robot>

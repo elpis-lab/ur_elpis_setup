@@ -15,6 +15,7 @@
   <xacro:arg name="physical_params" default="$(find ur_elpis_control)/config/$(arg ur_type)/physical_parameters.yaml"/>
   <xacro:arg name="visual_params" default="$(find ur_elpis_control)/config/$(arg ur_type)/visual_parameters.yaml"/>
 
+  <!-- Update robot_ip according to your setup-->
   <xacro:arg name="robot_ip" default="192.168.0.100"/>
   <xacro:arg name="headless_mode" default="false" />
   <xacro:arg name="ur_script_filename" default="$(find ur_client_library)/resources/external_control.urscript"/>
