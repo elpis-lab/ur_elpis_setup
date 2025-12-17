@@ -1,0 +1,48 @@
+# Static elements to be added to MoveIt planning scene
+# Planning frame for collision objects
+planning_frame: "world"
+
+# Table configuration
+table:
+  id: "table_base"
+  frame_id: "world"
+  type: "mesh"
+  
+  # Mesh configuration
+  mesh:
+    resource_path: "package://ur_elpis_description/assets/lab_scene/lab_scene.obj"
+    pose:
+      position:
+        x: -0.0055
+        y: -0.5
+        z: -0.7
+      orientation:
+        x: 0.0
+        y: 0.0
+        z: 0.0
+        w: 1.0
+
+# Ceiling configuration
+ceiling:
+  id: "ceiling_slab"
+  frame_id: "world"
+  type: "primitive"  # "mesh" or "primitive"
+  
+  # Primitive configuration
+  primitive:
+    shape: "box"  # "box" or "cylinder"
+    dimensions:
+      x: 1.524  # width
+      y: 1.524  # depth
+      z: 0.05   # thickness
+    pose:
+      position:
+        x: -0.0055  # Match table X position
+        y: -0.5     # Match table Y position
+        z: 0.975    # 0.95m above world origin + half thickness (0.05m / 2 = 0.025m)
+      orientation:
+        x: 0.0
+        y: 0.0
+        z: 0.0
+        w: 1.0
+
